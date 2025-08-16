@@ -2,6 +2,7 @@
   "name": "teaching-torch-react",
   "version": "1.0.0",
   "description": "Teaching Torch - Free Educational Resources for Sri Lankan Students",
+  "homepage": "https://github.com/Deadsecnote1/TT-react",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
@@ -19,7 +20,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -29,7 +32,7 @@
   },
   "browserslist": {
     "production": [
-      "^>0.2%",
+      ">0.2%",
       "not dead",
       "not op_mini all"
     ],
@@ -38,6 +41,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.0"
   },
   "keywords": [
     "education",

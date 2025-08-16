@@ -78,15 +78,15 @@ const Navbar = () => {
 
             {/* Grades Dropdown */}
             <li className="nav-item dropdown">
-              <a 
-                className="nav-link dropdown-toggle" 
-                href="#" 
-                role="button" 
+              <button 
+                className="nav-link dropdown-toggle btn btn-link border-0" 
+                type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
+                style={{ color: 'inherit', textDecoration: 'none' }}
               >
                 <i className="bi bi-book-fill me-1"></i>Grades
-              </a>
+              </button>
               <ul className="dropdown-menu">
                 <li>
                   <Link className="dropdown-item" to="/grade/grade6">
@@ -132,19 +132,19 @@ const Navbar = () => {
           <ul className="navbar-nav">
             {/* Language Filter Dropdown */}
             <li className="nav-item dropdown">
-              <a 
-                className="nav-link dropdown-toggle" 
-                href="#" 
-                role="button" 
+              <button 
+                className="nav-link dropdown-toggle btn btn-link border-0" 
+                type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 id="languageToggle"
+                style={{ color: 'inherit', textDecoration: 'none' }}
               >
                 <i className="bi bi-translate me-1"></i>
                 <span id="currentLanguage">
                   {getCurrentLanguage().display}
                 </span>
-              </a>
+              </button>
               <ul className="dropdown-menu">
                 {Object.entries(languages).map(([langKey, langConfig]) => (
                   <li key={langKey}>

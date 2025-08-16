@@ -112,16 +112,16 @@ const Contact = () => {
                     <i className="bi bi-chat-dots-fill text-info"></i>
                     <h5>Social Media</h5>
                     <div className="social-links mt-2">
-                      <a href="#" className="text-primary me-3" aria-label="Facebook">
+                      <a href="https://facebook.com" className="text-primary me-3" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-facebook" style={{ fontSize: '1.5rem' }}></i>
                       </a>
-                      <a href="#" className="text-info me-3" aria-label="Twitter">
+                      <a href="https://twitter.com" className="text-info me-3" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-twitter" style={{ fontSize: '1.5rem' }}></i>
                       </a>
-                      <a href="#" className="text-danger me-3" aria-label="YouTube">
+                      <a href="https://youtube.com" className="text-danger me-3" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-youtube" style={{ fontSize: '1.5rem' }}></i>
                       </a>
-                      <a href="#" className="text-success" aria-label="WhatsApp">
+                      <a href="https://wa.me/94112345678" className="text-success" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer">
                         <i className="bi bi-whatsapp" style={{ fontSize: '1.5rem' }}></i>
                       </a>
                     </div>

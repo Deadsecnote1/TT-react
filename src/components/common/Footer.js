@@ -13,16 +13,16 @@ const Footer = () => {
               Free educational resources for Sri Lankan students from Grade 6 to Advanced Level.
             </p>
             <div className="social-links">
-              <a href="#" className="text-light me-3" aria-label="Facebook">
+              <a href="https://facebook.com" className="text-light me-3" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                 <i className="bi bi-facebook"></i>
               </a>
-              <a href="#" className="text-light me-3" aria-label="Twitter">
+              <a href="https://twitter.com" className="text-light me-3" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
                 <i className="bi bi-twitter"></i>
               </a>
-              <a href="#" className="text-light me-3" aria-label="YouTube">
+              <a href="https://youtube.com" className="text-light me-3" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
                 <i className="bi bi-youtube"></i>
               </a>
-              <a href="#" className="text-light" aria-label="Email">
+              <a href="mailto:info@teachingtorch.lk" className="text-light" aria-label="Email">
                 <i className="bi bi-envelope"></i>
               </a>
             </div>
@@ -131,7 +131,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-light-emphasis">
+                <a href="mailto:help@teachingtorch.lk" className="text-light-emphasis">
                   Help
                 </a>
               </li>

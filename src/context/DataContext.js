@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
 // Create Data Context
 const DataContext = createContext();
@@ -155,50 +155,17 @@ const dataReducer = (state, action) => {
 export const DataProvider = ({ children }) => {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  // Initialize data on mount
-  useEffect(() => {
-    initializeData();
-  }, []);
-
-  // Initialize with default data or load from localStorage
-  const initializeData = () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    
-    try {
-      const savedData = localStorage.getItem('teachingTorchData');
-      
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        dispatch({ type: 'INITIALIZE_DATA', payload: parsedData });
-      } else {
-        const defaultData = getDefaultData();
-        dispatch({ type: 'INITIALIZE_DATA', payload: defaultData });
-        saveData(defaultData);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
-    }
-  };
-
-  // Save data to localStorage
-  const saveData = (data = state) => {
+  // Memoized save function
+  const saveData = useCallback((data = state) => {
     try {
       localStorage.setItem('teachingTorchData', JSON.stringify(data));
     } catch (error) {
       console.error('Error saving data:', error);
     }
-  };
-
-  // Save data whenever state changes
-  useEffect(() => {
-    if (!state.loading && Object.keys(state.grades).length > 0) {
-      saveData();
-    }
   }, [state]);
 
   // Get default data structure
-  const getDefaultData = () => ({
+  const getDefaultData = useCallback(() => ({
     grades: {
       'grade6': { name: 'Grade 6', display: 'Grade 6', active: true },
       'grade7': { name: 'Grade 7', display: 'Grade 7', active: true },
@@ -269,10 +236,42 @@ export const DataProvider = ({ children }) => {
       lastUpdated: new Date().toISOString(),
       activities: []
     }
-  });
+  }), []);
+
+  // Initialize data on mount
+  useEffect(() => {
+    const initializeData = () => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      try {
+        const savedData = localStorage.getItem('teachingTorchData');
+        
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          dispatch({ type: 'INITIALIZE_DATA', payload: parsedData });
+        } else {
+          const defaultData = getDefaultData();
+          dispatch({ type: 'INITIALIZE_DATA', payload: defaultData });
+          saveData(defaultData);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
+      }
+    };
+
+    initializeData();
+  }, [getDefaultData, saveData]);
+
+  // Save data whenever state changes
+  useEffect(() => {
+    if (!state.loading && Object.keys(state.grades).length > 0) {
+      saveData();
+    }
+  }, [state, saveData]);
 
   // Action creators
-  const addTextbook = (gradeId, subjectId, medium, fileData) => {
+  const addTextbook = useCallback((gradeId, subjectId, medium, fileData) => {
     dispatch({
       type: 'ADD_TEXTBOOK',
       payload: { gradeId, subjectId, medium, fileData }
@@ -281,9 +280,9 @@ export const DataProvider = ({ children }) => {
       type: 'LOG_ACTIVITY',
       payload: `Added ${medium} textbook for ${state.subjects[subjectId]?.name} - ${state.grades[gradeId]?.display}`
     });
-  };
+  }, [state.subjects, state.grades]);
 
-  const addPaper = (gradeId, subjectId, paperType, paperCategory, fileData, schoolName = '', language = 'english') => {
+  const addPaper = useCallback((gradeId, subjectId, paperType, paperCategory, fileData, schoolName = '', language = 'english') => {
     dispatch({
       type: 'ADD_PAPER',
       payload: { gradeId, subjectId, paperType, paperCategory, fileData, schoolName, language }
@@ -292,9 +291,9 @@ export const DataProvider = ({ children }) => {
       type: 'LOG_ACTIVITY',
       payload: `Added ${language} ${paperType} paper (${paperCategory}) from ${schoolName || 'Unknown School'}`
     });
-  };
+  }, []);
 
-  const addVideo = (gradeId, subjectId, videoData) => {
+  const addVideo = useCallback((gradeId, subjectId, videoData) => {
     dispatch({
       type: 'ADD_VIDEO',
       payload: { gradeId, subjectId, videoData }
@@ -303,17 +302,17 @@ export const DataProvider = ({ children }) => {
       type: 'LOG_ACTIVITY',
       payload: `Added ${videoData.language || 'english'} video: ${videoData.title}`
     });
-  };
+  }, []);
 
-  const logActivity = (message) => {
+  const logActivity = useCallback((message) => {
     dispatch({
       type: 'LOG_ACTIVITY',
       payload: message
     });
-  };
+  }, []);
 
   // Utility functions
-  const getSubjectsForGrade = (gradeId) => {
+  const getSubjectsForGrade = useCallback((gradeId) => {
     const subjects = {};
     Object.keys(state.subjects).forEach(subjectId => {
       const subject = state.subjects[subjectId];
@@ -322,9 +321,9 @@ export const DataProvider = ({ children }) => {
       }
     });
     return subjects;
-  };
+  }, [state.subjects]);
 
-  const getResources = (gradeId, subjectId) => {
+  const getResources = useCallback((gradeId, subjectId) => {
     return state.resources[gradeId]?.[subjectId] || {
       textbooks: {},
       papers: { 
@@ -333,13 +332,13 @@ export const DataProvider = ({ children }) => {
       },
       notes: {}
     };
-  };
+  }, [state.resources]);
 
-  const getVideos = (gradeId, subjectId) => {
+  const getVideos = useCallback((gradeId, subjectId) => {
     return state.videos[gradeId]?.[subjectId] || [];
-  };
+  }, [state.videos]);
 
-  const getStats = () => {
+  const getStats = useCallback(() => {
     const stats = {
       totalGrades: Object.keys(state.grades).length,
       totalSubjects: Object.keys(state.subjects).length,
@@ -413,9 +412,9 @@ export const DataProvider = ({ children }) => {
     });
 
     return stats;
-  };
+  }, [state.grades, state.subjects, state.resources, state.videos]);
 
-  const generateGradePageData = (gradeId) => {
+  const generateGradePageData = useCallback((gradeId) => {
     const grade = state.grades[gradeId];
     const subjects = getSubjectsForGrade(gradeId);
     const pageData = {
@@ -436,10 +435,10 @@ export const DataProvider = ({ children }) => {
     });
 
     return pageData;
-  };
+  }, [state.grades, getSubjectsForGrade, getResources, getVideos]);
 
   // Export data
-  const exportData = () => {
+  const exportData = useCallback(() => {
     const dataStr = JSON.stringify(state, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -453,10 +452,10 @@ export const DataProvider = ({ children }) => {
     URL.revokeObjectURL(url);
     
     logActivity('Data exported successfully');
-  };
+  }, [state, logActivity]);
 
   // Import data
-  const importData = (jsonData) => {
+  const importData = useCallback((jsonData) => {
     try {
       const importedData = JSON.parse(jsonData);
       
@@ -472,7 +471,7 @@ export const DataProvider = ({ children }) => {
       dispatch({ type: 'SET_ERROR', payload: 'Import failed: Invalid data format' });
       return false;
     }
-  };
+  }, [logActivity]);
 
   // Context value
   const value = {

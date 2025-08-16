@@ -1,12 +1,10 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { useLanguage } from '../context/LanguageContext';
 
 const GradePage = () => {
   const { gradeId } = useParams();
   const { generateGradePageData } = useData();
-  const { filterByLanguage, selectedLanguage } = useLanguage();
 
   // Generate page data
   const pageData = useMemo(() => {
