@@ -12,8 +12,23 @@ const AdminDashboard = () => {
   const [selectedLanguages, setSelectedLanguages] = useState(['english']);
   const [fileList, setFileList] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [recentUploads, setRecentUploads] = useState([]);
   
   const stats = getStats();
+
+  // Load uploaded files from localStorage on component mount
+  useEffect(() => {
+    const savedFiles = localStorage.getItem('teachingTorch_uploadedFiles');
+    if (savedFiles) {
+      setUploadedFiles(JSON.parse(savedFiles));
+    }
+    
+    const savedRecent = localStorage.getItem('teachingTorch_recentUploads');
+    if (savedRecent) {
+      setRecentUploads(JSON.parse(savedRecent));
+    }
+  }, []);
 
   // Check if admin is logged in
   useEffect(() => {
@@ -33,12 +48,36 @@ const AdminDashboard = () => {
     setFileList(files);
   };
 
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const files = Array.from(event.dataTransfer.files);
+    setFileList(files);
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
   const handleLanguageToggle = (language) => {
     setSelectedLanguages(prev => 
       prev.includes(language) 
         ? prev.filter(lang => lang !== language)
         : [...prev, language]
     );
+  };
+
+  const saveToLocalStorage = (files) => {
+    const currentFiles = JSON.parse(localStorage.getItem('teachingTorch_uploadedFiles') || '[]');
+    const updatedFiles = [...currentFiles, ...files];
+    localStorage.setItem('teachingTorch_uploadedFiles', JSON.stringify(updatedFiles));
+    setUploadedFiles(updatedFiles);
+
+    // Update recent uploads (keep last 10)
+    const recentFiles = files.slice(0, 10);
+    const currentRecent = JSON.parse(localStorage.getItem('teachingTorch_recentUploads') || '[]');
+    const updatedRecent = [...recentFiles, ...currentRecent].slice(0, 10);
+    localStorage.setItem('teachingTorch_recentUploads', JSON.stringify(updatedRecent));
+    setRecentUploads(updatedRecent);
   };
 
   const handleUpload = async () => {
@@ -52,15 +91,43 @@ const AdminDashboard = () => {
       return;
     }
 
-    // Simulate upload progress
+    // Reset progress
     setUploadProgress(0);
+
+    // Process files
+    const processedFiles = fileList.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      grade: selectedGrade,
+      subject: selectedSubject,
+      resourceType: selectedResourceType,
+      languages: selectedLanguages,
+      uploadDate: new Date().toISOString(),
+      id: Date.now() + Math.random()
+    }));
+
+    // Simulate upload progress
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          alert('Files uploaded successfully!');
+          
+          // Save to localStorage
+          saveToLocalStorage(processedFiles);
+          
+          // Success notification
+          alert(`✅ Successfully uploaded ${fileList.length} file(s)!\n\n` +
+                `Grade: ${selectedGrade}\n` +
+                `Subject: ${selectedSubject}\n` +
+                `Type: ${selectedResourceType}\n` +
+                `Languages: ${selectedLanguages.join(', ')}`);
+          
+          // Reset form
           setFileList([]);
           setUploadProgress(0);
+          document.getElementById('fileInput').value = '';
+          
           return 100;
         }
         return prev + 10;
@@ -69,22 +136,44 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteSelected = () => {
-    if (window.confirm('Are you sure you want to delete selected resources?')) {
-      alert('Selected resources have been deleted successfully!');
+    if (window.confirm('Are you sure you want to delete all uploaded files? This action cannot be undone.')) {
+      localStorage.removeItem('teachingTorch_uploadedFiles');
+      localStorage.removeItem('teachingTorch_recentUploads');
+      setUploadedFiles([]);
+      setRecentUploads([]);
+      alert('✅ All files deleted successfully!');
     }
   };
 
   const handleRefresh = () => {
-    alert('File manager refreshed!');
+    // Reload from localStorage
+    const savedFiles = localStorage.getItem('teachingTorch_uploadedFiles');
+    if (savedFiles) {
+      setUploadedFiles(JSON.parse(savedFiles));
+    }
+    
+    const savedRecent = localStorage.getItem('teachingTorch_recentUploads');
+    if (savedRecent) {
+      setRecentUploads(JSON.parse(savedRecent));
+    }
+    
+    alert('📁 File manager refreshed!');
   };
 
-  // Mock file manager data
-  const mockFiles = [
-    { name: 'grade-6/mathematics/textbook', count: 0 },
-    { name: 'grade-6/mathematics/notes', count: 0 },
-    { name: 'grade-6/science/textbook', count: 0 },
-    { name: 'grade-7/mathematics/textbook', count: 0 },
-  ];
+  // Group uploaded files by grade/subject/type
+  const getFileGroups = () => {
+    const groups = {};
+    uploadedFiles.forEach(file => {
+      const key = `${file.grade}/${file.subject}/${file.resourceType}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(file);
+    });
+    return groups;
+  };
+
+  const fileGroups = getFileGroups();
 
   return (
     <div className="admin-dashboard">
@@ -160,9 +249,9 @@ const AdminDashboard = () => {
                 <div className="col-md-3">
                   <div className="card text-center h-100">
                     <div className="card-body">
-                      <i className="bi bi-percent text-info" style={{ fontSize: '3rem' }}></i>
-                      <h3 className="mt-3">100%</h3>
-                      <p className="text-muted">Free Content</p>
+                      <i className="bi bi-file-earmark text-info" style={{ fontSize: '3rem' }}></i>
+                      <h3 className="mt-3">{uploadedFiles.length}</h3>
+                      <p className="text-muted">Uploaded Files</p>
                     </div>
                   </div>
                 </div>
@@ -178,36 +267,8 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Statistics Details */}
+              {/* Quick Actions */}
               <div className="row g-4">
-                <div className="col-md-6">
-                  <div className="card h-100">
-                    <div className="card-header">
-                      <h5>Language Distribution</h5>
-                    </div>
-                    <div className="card-body">
-                      <div className="mb-3">
-                        <div className="d-flex justify-content-between">
-                          <span>🇱🇰 Sinhala</span>
-                          <span>{stats.languageBreakdown.sinhala}</span>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="d-flex justify-content-between">
-                          <span>🇱🇰 Tamil</span>
-                          <span>{stats.languageBreakdown.tamil}</span>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="d-flex justify-content-between">
-                          <span>🇬🇧 English</span>
-                          <span>{stats.languageBreakdown.english}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="col-md-6">
                   <div className="card h-100">
                     <div className="card-header">
@@ -231,9 +292,28 @@ const AdminDashboard = () => {
                           onClick={() => setActiveTab('resources')}
                         >
                           <i className="bi bi-folder-plus me-2"></i>
-                          Manage Resources
+                          Manage Resources ({uploadedFiles.length} files)
                         </button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="card h-100">
+                    <div className="card-header">
+                      <h5>Upload Summary</h5>
+                    </div>
+                    <div className="card-body">
+                      {uploadedFiles.length > 0 ? (
+                        <div>
+                          <p>Total files uploaded: <strong>{uploadedFiles.length}</strong></p>
+                          <p>Storage locations: <strong>{Object.keys(fileGroups).length}</strong></p>
+                          <p>Recent uploads: <strong>{recentUploads.length}</strong></p>
+                        </div>
+                      ) : (
+                        <p className="text-muted">No files uploaded yet. Use the Manage Resources tab to upload files.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -329,7 +409,11 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* File Upload Area */}
-                    <div className="upload-area p-4 border-2 border-dashed border-success rounded text-center">
+                    <div 
+                      className="upload-area p-4 border-2 border-dashed border-success rounded text-center"
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                    >
                       <i className="bi bi-cloud-upload text-success" style={{ fontSize: '3rem' }}></i>
                       <h5 className="mt-3">Drop files here or click to browse</h5>
                       <p className="text-muted">Support PDF, DOC, DOCX, MP4, and image files</p>
@@ -391,7 +475,10 @@ const AdminDashboard = () => {
                       </button>
                       <button 
                         className="btn btn-outline-secondary"
-                        onClick={() => setFileList([])}
+                        onClick={() => {
+                          setFileList([]);
+                          document.getElementById('fileInput').value = '';
+                        }}
                         disabled={uploadProgress > 0}
                       >
                         <i className="bi bi-x-circle me-2"></i>
@@ -416,21 +503,32 @@ const AdminDashboard = () => {
                   </div>
                   <div className="card-body">
                     <div className="file-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                      {mockFiles.map((folder, index) => (
-                        <div key={index} className="d-flex justify-content-between align-items-center p-2 border-bottom">
-                          <div>
-                            <i className="bi bi-folder me-2 text-warning"></i>
-                            <small>{folder.name}</small>
+                      {Object.entries(fileGroups).length > 0 ? (
+                        Object.entries(fileGroups).map(([path, files]) => (
+                          <div key={path} className="d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div>
+                              <i className="bi bi-folder me-2 text-warning"></i>
+                              <small>{path}</small>
+                            </div>
+                            <span className="badge bg-primary rounded-pill">{files.length}</span>
                           </div>
-                          <span className="badge bg-primary rounded-pill">{folder.count}</span>
+                        ))
+                      ) : (
+                        <div className="text-center text-muted">
+                          <i className="bi bi-folder-x" style={{ fontSize: '2rem' }}></i>
+                          <p>No files uploaded yet</p>
                         </div>
-                      ))}
+                      )}
                     </div>
                     
                     <div className="mt-3 d-grid gap-2">
-                      <button className="btn btn-outline-danger btn-sm" onClick={handleDeleteSelected}>
+                      <button 
+                        className="btn btn-outline-danger btn-sm" 
+                        onClick={handleDeleteSelected}
+                        disabled={uploadedFiles.length === 0}
+                      >
                         <i className="bi bi-trash me-2"></i>
-                        Delete Selected
+                        Delete All Files
                       </button>
                       <button className="btn btn-outline-info btn-sm" onClick={handleRefresh}>
                         <i className="bi bi-arrow-clockwise me-2"></i>
@@ -445,11 +543,29 @@ const AdminDashboard = () => {
                   <div className="card-header">
                     <h6>
                       <i className="bi bi-clock-history me-2"></i>
-                      Recent Uploads
+                      Recent Uploads ({recentUploads.length})
                     </h6>
                   </div>
                   <div className="card-body">
-                    <p className="text-muted text-center">No recent uploads</p>
+                    {recentUploads.length > 0 ? (
+                      <div className="recent-uploads">
+                        {recentUploads.slice(0, 5).map((file, index) => (
+                          <div key={index} className="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                            <i className="bi bi-file-earmark me-2 text-primary"></i>
+                            <div className="flex-grow-1">
+                              <small className="d-block text-truncate" style={{ maxWidth: '150px' }}>
+                                {file.name}
+                              </small>
+                              <small className="text-muted">
+                                {new Date(file.uploadDate).toLocaleDateString()}
+                              </small>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted text-center">No recent uploads</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -458,11 +574,11 @@ const AdminDashboard = () => {
 
           {/* Info Section */}
           <div className="alert alert-info mt-4">
-            <h5><i className="bi bi-info-circle me-2"></i>Admin Panel</h5>
+            <h5><i className="bi bi-info-circle me-2"></i>File Upload Demo</h5>
             <p className="mb-0">
               {activeTab === 'overview' ? 
-                'This dashboard provides an overview of the Teaching Torch platform statistics and quick access to management features.' :
-                'Use this interface to upload and manage educational resources. Select the appropriate grade, subject, and language before uploading files.'
+                'This dashboard provides an overview of uploaded files and platform statistics.' :
+                '🔹 This is a functional demo that saves files to browser localStorage. Files persist until you clear browser data or delete them.\n🔹 In production, files would be uploaded to a server/cloud storage.\n🔹 Try uploading some sample files to test the functionality!'
               }
             </p>
           </div>
@@ -495,6 +611,11 @@ const AdminDashboard = () => {
         .nav-tabs .nav-link:hover {
           color: var(--primary);
           background-color: rgba(46, 125, 50, 0.1);
+        }
+
+        .recent-uploads {
+          max-height: 200px;
+          overflow-y: auto;
         }
       `}</style>
     </div>
