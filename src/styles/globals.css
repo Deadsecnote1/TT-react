@@ -92,17 +92,24 @@ body {
   font-weight: 500;
   transition: color 0.3s ease;
   color: rgba(255,255,255,0.9) !important;
+  text-decoration: none !important;
 }
 
 .nav-link:hover {
   color: white !important;
   background-color: rgba(255,255,255,0.1) !important;
+  text-decoration: none !important;
 }
 
 .nav-link.active {
   color: white !important;
   font-weight: 600;
   background-color: rgba(255,255,255,0.2) !important;
+}
+
+/* Remove underlines from all links */
+a, a:hover, a:focus, a:active {
+  text-decoration: none !important;
 }
 
 /* Dropdown Menu Fixes */
@@ -116,11 +123,13 @@ body {
 .dropdown-item {
   color: var(--text-primary);
   transition: all 0.2s ease;
+  text-decoration: none !important;
 }
 
 .dropdown-item:hover, .dropdown-item:focus {
   background-color: var(--primary);
   color: white !important;
+  text-decoration: none !important;
 }
 
 .dropdown-divider {
@@ -184,7 +193,7 @@ body {
   transition: all 0.3s ease;
   border: 2px solid transparent;
   color: var(--text-primary);
-  text-decoration: none;
+  text-decoration: none !important;
   display: block;
   height: 100%;
 }
@@ -193,7 +202,7 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px var(--card-shadow);
   border-color: var(--primary);
-  text-decoration: none;
+  text-decoration: none !important;
   color: var(--text-primary);
 }
 
@@ -281,12 +290,14 @@ body {
   background: var(--primary);
   border-color: var(--primary);
   transition: all 0.3s ease;
+  text-decoration: none !important;
 }
 
 .btn-primary:hover {
   background: #1B5E20;
   border-color: #1B5E20;
   transform: translateY(-2px);
+  text-decoration: none !important;
 }
 
 .btn-success {
@@ -386,11 +397,11 @@ small {
 
 .breadcrumb-item a {
   color: var(--primary);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 .breadcrumb-item a:hover {
-  text-decoration: underline;
+  text-decoration: underline !important;
 }
 
 .breadcrumb-item.active {
@@ -452,37 +463,82 @@ small {
   color: var(--text-secondary);
 }
 
-/* Footer */
-footer {
+/* Footer Fixes */
+.footer-section {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
 }
 
-footer h5, footer h6 {
+.footer-title,
+.footer-heading {
   color: var(--text-primary) !important;
+  font-weight: 600;
 }
 
-footer p {
+.footer-text,
+.footer-copyright {
   color: var(--text-secondary) !important;
 }
 
-footer a {
+.footer-nav-link,
+.footer-link {
   color: var(--text-secondary) !important;
+  text-decoration: none !important;
   transition: color 0.3s ease;
+  cursor: pointer;
 }
 
-footer a:hover {
+.footer-nav-link:hover,
+.footer-link:hover {
   color: var(--primary) !important;
+  text-decoration: none !important;
 }
 
-footer .text-light {
-  color: var(--text-primary) !important;
-}
-
-footer .text-muted {
+.footer-made-with {
   color: var(--text-muted) !important;
+}
+
+.footer-divider {
+  border-color: var(--border-color) !important;
+}
+
+/* Resource Cards - Remove underlines */
+.resource-card {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 5px 20px var(--card-shadow);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  color: var(--text-primary);
+  text-decoration: none !important;
+  display: block;
+  height: 100%;
+}
+
+.resource-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px var(--card-shadow);
+  border-color: var(--primary);
+  text-decoration: none !important;
+  color: var(--text-primary);
+}
+
+.resource-card h5,
+.resource-card h6 {
+  color: var(--text-primary);
+  text-decoration: none !important;
+}
+
+.resource-card p {
+  color: var(--text-secondary);
+  text-decoration: none !important;
+}
+
+.resource-card i {
+  color: var(--primary);
 }
 
 /* Alert Styling */
@@ -512,6 +568,22 @@ footer .text-muted {
 .alert-danger {
   border-left-color: var(--danger);
   background-color: rgba(211, 47, 47, 0.1);
+}
+
+/* List Group Items */
+.list-group-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.list-group-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Badge styling */
+.badge {
+  font-weight: 500;
 }
 
 /* Responsive */
