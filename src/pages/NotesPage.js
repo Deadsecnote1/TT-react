@@ -152,9 +152,6 @@ const NotesPage = () => {
       {/* Page Header */}
       <header className="grade-header">
         <div className="container text-center">
-          <div className="grade-number">
-            {grade.display.includes('A/L') ? 'A/L' : grade.display.split(' ')[1]}
-          </div>
           <h1 className="display-4 fw-bold">{grade.display} Short Notes</h1>
           <p className="lead">Quick reference notes for all chapters</p>
         </div>

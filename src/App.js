@@ -60,9 +60,19 @@ function App() {
 
 const NotFound = () => (
   <div className="container text-center py-5">
-    <h1 className="display-1 text-primary">404</h1>
-    <h2 className="mb-4">Page Not Found</h2>
-    <a href="/" className="btn btn-primary">Go Home</a>
+    <div className="row justify-content-center">
+      <div className="col-md-6">
+        <div className="error-page">
+          <h1 className="display-1 text-primary">404</h1>
+          <h2 className="mb-4">Page Not Found</h2>
+          <p className="mb-4">The page you're looking for doesn't exist.</p>
+          <a href="/" className="btn btn-primary">
+            <i className="bi bi-house me-2"></i>
+            Go Home
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 );
 

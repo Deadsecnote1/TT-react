@@ -155,16 +155,7 @@ const dataReducer = (state, action) => {
 export const DataProvider = ({ children }) => {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  // Memoized save function
-  const saveData = useCallback((data = state) => {
-    try {
-      localStorage.setItem('teachingTorchData', JSON.stringify(data));
-    } catch (error) {
-      console.error('Error saving data:', error);
-    }
-  }, [state]);
-
-  // Get default data structure
+  // Get default data structure (stable function)
   const getDefaultData = useCallback(() => ({
     grades: {
       'grade6': { name: 'Grade 6', display: 'Grade 6', active: true },
@@ -238,37 +229,38 @@ export const DataProvider = ({ children }) => {
     }
   }), []);
 
-  // Initialize data on mount
+  // Initialize data on mount only
   useEffect(() => {
-    const initializeData = () => {
-      dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_LOADING', payload: true });
+    
+    try {
+      const savedData = localStorage.getItem('teachingTorchData');
       
-      try {
-        const savedData = localStorage.getItem('teachingTorchData');
-        
-        if (savedData) {
-          const parsedData = JSON.parse(savedData);
-          dispatch({ type: 'INITIALIZE_DATA', payload: parsedData });
-        } else {
-          const defaultData = getDefaultData();
-          dispatch({ type: 'INITIALIZE_DATA', payload: defaultData });
-          saveData(defaultData);
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        dispatch({ type: 'INITIALIZE_DATA', payload: parsedData });
+      } else {
+        const defaultData = getDefaultData();
+        dispatch({ type: 'INITIALIZE_DATA', payload: defaultData });
+        // Save default data
+        localStorage.setItem('teachingTorchData', JSON.stringify(defaultData));
       }
-    };
+    } catch (error) {
+      console.error('Error loading data:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
+    }
+  }, [getDefaultData]); // Only depend on getDefaultData
 
-    initializeData();
-  }, [getDefaultData, saveData]);
-
-  // Save data whenever state changes
+  // Save data whenever state changes (but not during initialization)
   useEffect(() => {
     if (!state.loading && Object.keys(state.grades).length > 0) {
-      saveData();
+      try {
+        localStorage.setItem('teachingTorchData', JSON.stringify(state));
+      } catch (error) {
+        console.error('Error saving data:', error);
+      }
     }
-  }, [state, saveData]);
+  }, [state.loading, state.grades, state.subjects, state.resources, state.videos, state.settings]);
 
   // Action creators
   const addTextbook = useCallback((gradeId, subjectId, medium, fileData) => {

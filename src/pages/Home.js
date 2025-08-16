@@ -26,8 +26,6 @@ const Home = () => {
             <p className="lead mb-4">Free Educational Resources for Sri Lankan Students (Grades 6–A/L)</p>
             <div className="hero-buttons">
               <a href="#grades" className="btn btn-light btn-lg me-3">Explore Grades</a>
-              {/* Uncomment when admin is ready */}
-              {/* <Link to="/admin/login" className="btn btn-outline-light btn-lg">Admin Login</Link> */}
             </div>
           </div>
         </div>
@@ -38,32 +36,75 @@ const Home = () => {
         <div className="container">
           <h2 className="text-center mb-5">Choose Your Grade</h2>
           <div className="row g-4">
-            {Object.entries(grades).map(([gradeId, grade]) => {
-              const config = gradeConfigs[gradeId];
-              if (!config) return null;
+            {/* Grade 6 */}
+            <div className="col-md-4 col-sm-6">
+              <Link to="/grade/grade6" className="grade-card">
+                <div className="grade-icon">6</div>
+                <h5>Grade 6</h5>
+                <p className="text-muted">Foundation level subjects</p>
+                <div className="btn btn-primary">View Resources</div>
+              </Link>
+            </div>
 
-              return (
-                <div key={gradeId} className={`col-md-4 col-sm-6 ${gradeId === 'al' ? 'col-md-6 mx-auto' : ''}`}>
-                  <Link 
-                    to={`/grade/${gradeId}`} 
-                    className={`grade-card ${gradeId === 'al' ? 'advanced-level' : ''}`}
-                  >
-                    <div className="grade-icon">{config.number}</div>
-                    <h5>{grade.display}</h5>
-                    <p className="text-muted">
-                      {gradeId === 'grade6' && 'Foundation level subjects'}
-                      {gradeId === 'grade7' && 'Intermediate level content'}
-                      {gradeId === 'grade8' && 'Advanced concepts introduction'}
-                      {gradeId === 'grade9' && 'Pre-O/L preparation'}
-                      {gradeId === 'grade10' && 'O/L examination year'}
-                      {gradeId === 'grade11' && 'Post-O/L studies'}
-                      {gradeId === 'al' && 'University preparation'}
-                    </p>
-                    <div className="btn btn-primary">View Resources</div>
-                  </Link>
-                </div>
-              );
-            })}
+            {/* Grade 7 */}
+            <div className="col-md-4 col-sm-6">
+              <Link to="/grade/grade7" className="grade-card">
+                <div className="grade-icon">7</div>
+                <h5>Grade 7</h5>
+                <p className="text-muted">Intermediate level content</p>
+                <div className="btn btn-primary">View Resources</div>
+              </Link>
+            </div>
+
+            {/* Grade 8 */}
+            <div className="col-md-4 col-sm-6">
+              <Link to="/grade/grade8" className="grade-card">
+                <div className="grade-icon">8</div>
+                <h5>Grade 8</h5>
+                <p className="text-muted">Advanced concepts introduction</p>
+                <div className="btn btn-primary">View Resources</div>
+              </Link>
+            </div>
+
+            {/* Grade 9 */}
+            <div className="col-md-4 col-sm-6">
+              <Link to="/grade/grade9" className="grade-card">
+                <div className="grade-icon">9</div>
+                <h5>Grade 9</h5>
+                <p className="text-muted">Pre-O/L preparation</p>
+                <div className="btn btn-primary">View Resources</div>
+              </Link>
+            </div>
+
+            {/* Grade 10 */}
+            <div className="col-md-4 col-sm-6">
+              <Link to="/grade/grade10" className="grade-card">
+                <div className="grade-icon">10</div>
+                <h5>Grade 10</h5>
+                <p className="text-muted">O/L examination year</p>
+                <div className="btn btn-primary">View Resources</div>
+              </Link>
+            </div>
+
+            {/* Grade 11 */}
+            <div className="col-md-4 col-sm-6">
+              <Link to="/grade/grade11" className="grade-card">
+                <div className="grade-icon">11</div>
+                <h5>Grade 11</h5>
+                <p className="text-muted">Post-O/L studies</p>
+                <div className="btn btn-primary">View Resources</div>
+              </Link>
+            </div>
+
+            {/* Advanced Level */}
+            <div className="col-md-6 mx-auto">
+              <Link to="/grade/al" className="grade-card advanced-level">
+                <div className="grade-icon">A/L</div>
+                <h5>Advanced Level</h5>
+                <p className="text-muted">University preparation</p>
+                <div className="btn btn-success">View Resources</div>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -110,7 +151,7 @@ const Home = () => {
           <div className="row text-center">
             <div className="col-md-3">
               <div className="stat-item">
-                <h3 className="text-primary">{Object.keys(grades).length}</h3>
+                <h3 className="text-primary">7</h3>
                 <span>Grade Levels</span>
               </div>
             </div>

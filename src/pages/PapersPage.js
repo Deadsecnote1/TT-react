@@ -179,9 +179,6 @@ const PapersPage = () => {
       {/* Page Header */}
       <header className="grade-header">
         <div className="container text-center">
-          <div className="grade-number">
-            {grade.display.includes('A/L') ? 'A/L' : grade.display.split(' ')[1]}
-          </div>
           <h1 className="display-4 fw-bold">{grade.display} Exam Papers</h1>
           <p className="lead">Past papers for practice and preparation</p>
         </div>

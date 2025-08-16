@@ -177,9 +177,6 @@ const VideosPage = () => {
       {/* Page Header */}
       <header className="grade-header">
         <div className="container text-center">
-          <div className="grade-number">
-            {grade.display.includes('A/L') ? 'A/L' : grade.display.split(' ')[1]}
-          </div>
           <h1 className="display-4 fw-bold">{grade.display} Video Lessons</h1>
           <p className="lead">Educational videos and tutorials</p>
         </div>

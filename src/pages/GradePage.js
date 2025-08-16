@@ -112,9 +112,6 @@ const GradePage = () => {
       {/* Grade Header */}
       <header className="grade-header">
         <div className="container text-center">
-          <div className="grade-number">
-            {grade.display.includes('A/L') ? 'A/L' : grade.display.split(' ')[1]}
-          </div>
           <h1 className="display-4 fw-bold">{grade.display} Resources</h1>
           <p className="lead">Complete study materials in all three mediums</p>
         </div>
