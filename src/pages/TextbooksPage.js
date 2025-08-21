@@ -3,39 +3,126 @@ import { useParams, Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
 
+// API Base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const TextbooksPage = () => {
   const { gradeId } = useParams();
   const { generateGradePageData } = useData();
   const { selectedLanguage, shouldShowResource } = useLanguage();
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedStream, setSelectedStream] = useState('');
 
-  // Load uploaded files from localStorage
-  useEffect(() => {
-    const savedFiles = localStorage.getItem('teachingTorch_uploadedFiles');
-    if (savedFiles) {
-      setUploadedFiles(JSON.parse(savedFiles));
+  // Advanced Level Streams Configuration
+  const alStreams = {
+    'science': {
+      name: 'Science Stream',
+      subjects: {
+        'physics': { name: 'Physics', icon: 'bi bi-atom' },
+        'chemistry': { name: 'Chemistry', icon: 'bi bi-flask' },
+        'biology': { name: 'Biology', icon: 'bi bi-tree' },
+        'mathematics': { name: 'Combined Mathematics', icon: 'bi bi-calculator' },
+        'ict': { name: 'ICT', icon: 'bi bi-laptop' }
+      }
+    },
+    'commerce': {
+      name: 'Commerce Stream',
+      subjects: {
+        'accounting': { name: 'Accounting', icon: 'bi bi-calculator-fill' },
+        'business-studies': { name: 'Business Studies', icon: 'bi bi-briefcase' },
+        'economics': { name: 'Economics', icon: 'bi bi-graph-up' },
+        'geography': { name: 'Geography', icon: 'bi bi-globe' },
+        'history': { name: 'History', icon: 'bi bi-clock-history' }
+      }
+    },
+    'arts': {
+      name: 'Arts Stream',
+      subjects: {
+        'sinhala': { name: 'Sinhala', icon: 'bi bi-book' },
+        'tamil': { name: 'Tamil', icon: 'bi bi-book' },
+        'english': { name: 'English', icon: 'bi bi-book' },
+        'history': { name: 'History', icon: 'bi bi-clock-history' },
+        'geography': { name: 'Geography', icon: 'bi bi-globe' },
+        'political-science': { name: 'Political Science', icon: 'bi bi-people' },
+        'logic': { name: 'Logic & Scientific Method', icon: 'bi bi-lightbulb' }
+      }
+    },
+    'technology': {
+      name: 'Technology Stream',
+      subjects: {
+        'engineering-technology': { name: 'Engineering Technology', icon: 'bi bi-gear' },
+        'bio-system-technology': { name: 'Bio System Technology', icon: 'bi bi-cpu' },
+        'ict': { name: 'ICT', icon: 'bi bi-laptop' },
+        'science-for-technology': { name: 'Science for Technology', icon: 'bi bi-atom' }
+      }
     }
-  }, []);
+  };
+
+  // Default subjects for other grades
+  const defaultSubjects = {
+    'mathematics': { name: 'Mathematics', icon: 'bi bi-calculator' },
+    'science': { name: 'Science', icon: 'bi bi-flask' },
+    'english': { name: 'English', icon: 'bi bi-book' },
+    'sinhala': { name: 'Sinhala', icon: 'bi bi-book' },
+    'tamil': { name: 'Tamil', icon: 'bi bi-book' },
+    'history': { name: 'History', icon: 'bi bi-clock-history' },
+    'geography': { name: 'Geography', icon: 'bi bi-globe' },
+    'health': { name: 'Health & Physical Education', icon: 'bi bi-heart-pulse' },
+    'religion': { name: 'Religion', icon: 'bi bi-book' },
+    'art': { name: 'Art', icon: 'bi bi-palette' },
+    'music': { name: 'Music', icon: 'bi bi-music-note' },
+    'dancing': { name: 'Dancing', icon: 'bi bi-person' },
+    'drama': { name: 'Drama & Theatre', icon: 'bi bi-mask' }
+  };
+
+  // Load uploaded files from API or localStorage
+  useEffect(() => {
+    fetchTextbooks();
+  }, [gradeId]);
+
+  // Set default stream for AL
+  useEffect(() => {
+    if (gradeId === 'al' && !selectedStream) {
+      setSelectedStream('science');
+    }
+  }, [gradeId, selectedStream]);
+
+  const fetchTextbooks = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/files/${gradeId}/textbook`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setUploadedFiles(data.files);
+      } else {
+        throw new Error('API request failed');
+      }
+    } catch (error) {
+      console.error('Error fetching from API, using localStorage:', error);
+      const savedFiles = localStorage.getItem('teachingTorch_uploadedFiles');
+      if (savedFiles) {
+        const allFiles = JSON.parse(savedFiles);
+        const textbooks = allFiles.filter(file => 
+          file.grade === gradeId && file.resourceType === 'textbook'
+        );
+        setUploadedFiles(textbooks);
+      }
+    }
+    setIsLoading(false);
+  };
 
   // Generate page data
   const pageData = useMemo(() => {
     return generateGradePageData(gradeId);
   }, [gradeId, generateGradePageData]);
 
-  // Filter uploaded textbooks for current grade
-  const getUploadedTextbooks = () => {
-    return uploadedFiles.filter(file => 
-      file.grade === gradeId && 
-      file.resourceType === 'textbook'
-    );
-  };
-
   // Group uploaded textbooks by subject and language
   const getTextbooksBySubject = () => {
-    const uploadedTextbooks = getUploadedTextbooks();
     const groupedTextbooks = {};
 
-    uploadedTextbooks.forEach(file => {
+    uploadedFiles.forEach(file => {
       if (!groupedTextbooks[file.subject]) {
         groupedTextbooks[file.subject] = {};
       }
@@ -63,7 +150,7 @@ const TextbooksPage = () => {
     );
   }
 
-  const { grade, subjects } = pageData;
+  const { grade } = pageData;
   const uploadedTextbooks = getTextbooksBySubject();
 
   // Helper function to format file size
@@ -73,40 +160,6 @@ const TextbooksPage = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // Generate textbook download component for original data
-  const TextbookDownload = ({ textbook, medium }) => {
-    if (!textbook) {
-      return (
-        <div className="text-center py-4">
-          <i className="bi bi-file-earmark text-muted" style={{ fontSize: '3rem' }}></i>
-          <p className="text-muted mt-2">No {medium} textbook available</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="download-item text-center">
-        <div className="download-icon mb-3">
-          <i className="bi bi-file-pdf text-danger" style={{ fontSize: '3rem' }}></i>
-        </div>
-        <div className="download-info mb-3">
-          <h6 className="mb-1">{textbook.filename}</h6>
-          <small className="text-muted">{formatFileSize(textbook.size)}</small>
-        </div>
-        <a 
-          href={`/${textbook.path}`} 
-          className="btn btn-primary btn-sm" 
-          download
-          onClick={() => {
-            console.log(`Downloaded: ${textbook.filename}`);
-          }}
-        >
-          <i className="bi bi-download me-1"></i>Download
-        </a>
-      </div>
-    );
   };
 
   // Generate uploaded textbook component
@@ -128,7 +181,7 @@ const TextbooksPage = () => {
               <i className="bi bi-file-pdf text-danger" style={{ fontSize: '2.5rem' }}></i>
             </div>
             <div className="download-info mb-2">
-              <h6 className="mb-1 small">{file.name}</h6>
+              <h6 className="mb-1 small">{file.originalName || file.name}</h6>
               <small className="text-muted">{formatFileSize(file.size)}</small>
               <br />
               <small className="text-success">
@@ -139,7 +192,11 @@ const TextbooksPage = () => {
             <button 
               className="btn btn-primary btn-sm"
               onClick={() => {
-                alert(`📁 File: ${file.name}\n📊 Size: ${formatFileSize(file.size)}\n📅 Uploaded: ${new Date(file.uploadDate).toLocaleDateString()}\n\n⚠️ Note: In production, this would download the actual file from server storage.`);
+                if (file.downloadUrl) {
+                  window.open(file.downloadUrl, '_blank');
+                } else {
+                  alert(`📁 File: ${file.originalName || file.name}\n📊 Size: ${formatFileSize(file.size)}\n📅 Uploaded: ${new Date(file.uploadDate).toLocaleDateString()}\n\n${file.downloadUrl ? '⬇️ Downloading from server...' : '⚠️ Note: In demo mode. In production, this would download the actual file.'}`);
+                }
               }}
             >
               <i className="bi bi-download me-1"></i>Download
@@ -150,26 +207,28 @@ const TextbooksPage = () => {
     );
   };
 
-  // Get subject list (combine original and uploaded)
+  // Get all subjects (show all subjects whether they have files or not)
   const getAllSubjects = () => {
-    const subjectList = { ...subjects };
-    
-    // Add subjects from uploaded files
-    Object.keys(uploadedTextbooks).forEach(subjectId => {
-      if (!subjectList[subjectId]) {
-        // Create a basic subject entry for uploaded subjects
-        subjectList[subjectId] = {
-          name: subjectId.charAt(0).toUpperCase() + subjectId.slice(1),
-          icon: 'bi bi-book',
-          resources: { textbooks: {} }
-        };
-      }
-    });
-
-    return subjectList;
+    if (gradeId === 'al') {
+      return selectedStream ? alStreams[selectedStream].subjects : {};
+    }
+    return defaultSubjects;
   };
 
   const allSubjects = getAllSubjects();
+
+  if (isLoading) {
+    return (
+      <div className="container py-5">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading textbooks...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="textbooks-page">
@@ -177,7 +236,9 @@ const TextbooksPage = () => {
       <header className="grade-header">
         <div className="container text-center">
           <h1 className="display-4 fw-bold">{grade.display} Textbooks</h1>
-          <p className="lead">Download textbooks in Sinhala, Tamil, and English</p>
+          <p className="lead">
+            {gradeId === 'al' ? 'Download A/L textbooks by stream' : 'Download textbooks in Sinhala, Tamil, and English'}
+          </p>
         </div>
       </header>
 
@@ -200,14 +261,47 @@ const TextbooksPage = () => {
         </div>
       </section>
 
+      {/* A/L Stream Selector */}
+      {gradeId === 'al' && (
+        <section className="py-3 bg-primary bg-opacity-10">
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-md-8">
+                <h5 className="text-center mb-3">Select Your Stream</h5>
+                <div className="row g-3">
+                  {Object.entries(alStreams).map(([streamId, stream]) => (
+                    <div key={streamId} className="col-md-3">
+                      <button
+                        className={`btn w-100 ${selectedStream === streamId ? 'btn-primary' : 'btn-outline-primary'}`}
+                        onClick={() => setSelectedStream(streamId)}
+                      >
+                        <div className="text-center">
+                          <i className={`bi ${
+                            streamId === 'science' ? 'bi-atom' :
+                            streamId === 'commerce' ? 'bi-briefcase' :
+                            streamId === 'arts' ? 'bi-palette' : 'bi-gear'
+                          } d-block mb-1`} style={{ fontSize: '1.5rem' }}></i>
+                          <small>{stream.name}</small>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Upload Status */}
-      {getUploadedTextbooks().length > 0 && (
+      {uploadedFiles.length > 0 && (
         <section className="py-2 bg-success bg-opacity-10">
           <div className="container">
             <div className="text-center">
               <small className="text-success">
                 <i className="bi bi-cloud-check me-1"></i>
-                <strong>{getUploadedTextbooks().length} uploaded textbook{getUploadedTextbooks().length !== 1 ? 's' : ''}</strong> available for {grade.display}
+                <strong>{uploadedFiles.length} uploaded textbook{uploadedFiles.length !== 1 ? 's' : ''}</strong> available for {grade.display}
+                {uploadedFiles.some(f => f.downloadUrl) && ' | 🔗 Server files available for download'}
               </small>
             </div>
           </div>
@@ -223,7 +317,7 @@ const TextbooksPage = () => {
                 <i className="bi bi-filter me-1"></i>
                 Showing textbooks in: <strong>
                   {selectedLanguage === 'sinhala' && 'සිංහල (Sinhala)'}
-                  {selectedLanguage === 'tamil' && 'தமிழ் (Tamil)'}
+                  {selectedLanguage === 'tamil' && 'தமிழ් (Tamil)'}
                   {selectedLanguage === 'english' && 'English'}
                 </strong>
               </small>
@@ -235,18 +329,28 @@ const TextbooksPage = () => {
       {/* Textbooks Content */}
       <section className="py-5">
         <div className="container">
-          {Object.keys(allSubjects).map(subjectId => {
-            const subject = allSubjects[subjectId];
-            const originalTextbooks = subject.resources.textbooks || {};
+          {/* Show selected stream info for A/L */}
+          {gradeId === 'al' && selectedStream && (
+            <div className="mb-4">
+              <div className="alert alert-info">
+                <h5 className="mb-2">
+                  <i className={`bi ${
+                    selectedStream === 'science' ? 'bi-atom' :
+                    selectedStream === 'commerce' ? 'bi-briefcase' :
+                    selectedStream === 'arts' ? 'bi-palette' : 'bi-gear'
+                  } me-2`}></i>
+                  {alStreams[selectedStream].name} Subjects
+                </h5>
+                <p className="mb-0">
+                  Showing textbooks for {Object.keys(allSubjects).length} subjects in the {alStreams[selectedStream].name}.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {Object.entries(allSubjects).map(([subjectId, subject]) => {
             const uploadedSubjectTextbooks = uploadedTextbooks[subjectId] || {};
-            
-            // Check if there are any textbooks for this subject (original or uploaded)
-            const hasOriginalTextbooks = Object.keys(originalTextbooks).length > 0;
             const hasUploadedTextbooks = Object.keys(uploadedSubjectTextbooks).length > 0;
-            
-            if (!hasOriginalTextbooks && !hasUploadedTextbooks) {
-              return null;
-            }
 
             return (
               <div key={subjectId} className="subject-section mb-5">
@@ -258,10 +362,10 @@ const TextbooksPage = () => {
                     <div>
                       <h3 className="mb-0">{subject.name}</h3>
                       <small className="text-muted">
-                        {hasOriginalTextbooks && `${Object.keys(originalTextbooks).length} original`}
-                        {hasOriginalTextbooks && hasUploadedTextbooks && ' + '}
-                        {hasUploadedTextbooks && `${Object.values(uploadedSubjectTextbooks).flat().length} uploaded`}
-                        {' '}textbook{(Object.keys(originalTextbooks).length + Object.values(uploadedSubjectTextbooks).flat().length) !== 1 ? 's' : ''} available
+                        {hasUploadedTextbooks ? 
+                          `${Object.values(uploadedSubjectTextbooks).flat().length} textbook${Object.values(uploadedSubjectTextbooks).flat().length !== 1 ? 's' : ''} available` :
+                          'No textbooks uploaded yet'
+                        }
                       </small>
                     </div>
                   </div>
@@ -278,24 +382,11 @@ const TextbooksPage = () => {
                           </h5>
                         </div>
                         <div className="card-body">
-                          {/* Original Textbook */}
-                          {originalTextbooks.sinhala && (
-                            <div className="mb-3">
-                              <small className="text-muted d-block mb-2">
-                                <i className="bi bi-archive me-1"></i>Original Textbook
-                              </small>
-                              <TextbookDownload 
-                                textbook={originalTextbooks.sinhala} 
-                                medium="Sinhala" 
-                              />
-                            </div>
-                          )}
-                          
                           {/* Uploaded Textbooks */}
-                          {uploadedSubjectTextbooks.sinhala && (
+                          {uploadedSubjectTextbooks.sinhala ? (
                             <div>
                               <small className="text-success d-block mb-2">
-                                <i className="bi bi-cloud-upload me-1"></i>Uploaded Textbooks
+                                <i className="bi bi-cloud-upload me-1"></i>Available Textbooks
                               </small>
                               <UploadedTextbookDownload 
                                 files={uploadedSubjectTextbooks.sinhala}
@@ -303,13 +394,13 @@ const TextbooksPage = () => {
                                 language="sinhala"
                               />
                             </div>
-                          )}
-                          
-                          {/* No textbooks */}
-                          {!originalTextbooks.sinhala && !uploadedSubjectTextbooks.sinhala && (
+                          ) : (
                             <div className="text-center py-4">
                               <i className="bi bi-file-earmark text-muted" style={{ fontSize: '3rem' }}></i>
                               <p className="text-muted mt-2">No Sinhala textbook available</p>
+                              <Link to="/admin/login" className="btn btn-outline-primary btn-sm">
+                                <i className="bi bi-plus-circle me-1"></i>Upload Textbook
+                              </Link>
                             </div>
                           )}
                         </div>
@@ -327,24 +418,11 @@ const TextbooksPage = () => {
                           </h5>
                         </div>
                         <div className="card-body">
-                          {/* Original Textbook */}
-                          {originalTextbooks.tamil && (
-                            <div className="mb-3">
-                              <small className="text-muted d-block mb-2">
-                                <i className="bi bi-archive me-1"></i>Original Textbook
-                              </small>
-                              <TextbookDownload 
-                                textbook={originalTextbooks.tamil} 
-                                medium="Tamil" 
-                              />
-                            </div>
-                          )}
-                          
                           {/* Uploaded Textbooks */}
-                          {uploadedSubjectTextbooks.tamil && (
+                          {uploadedSubjectTextbooks.tamil ? (
                             <div>
                               <small className="text-success d-block mb-2">
-                                <i className="bi bi-cloud-upload me-1"></i>Uploaded Textbooks
+                                <i className="bi bi-cloud-upload me-1"></i>Available Textbooks
                               </small>
                               <UploadedTextbookDownload 
                                 files={uploadedSubjectTextbooks.tamil}
@@ -352,13 +430,13 @@ const TextbooksPage = () => {
                                 language="tamil"
                               />
                             </div>
-                          )}
-                          
-                          {/* No textbooks */}
-                          {!originalTextbooks.tamil && !uploadedSubjectTextbooks.tamil && (
+                          ) : (
                             <div className="text-center py-4">
                               <i className="bi bi-file-earmark text-muted" style={{ fontSize: '3rem' }}></i>
                               <p className="text-muted mt-2">No Tamil textbook available</p>
+                              <Link to="/admin/login" className="btn btn-outline-primary btn-sm">
+                                <i className="bi bi-plus-circle me-1"></i>Upload Textbook
+                              </Link>
                             </div>
                           )}
                         </div>
@@ -376,24 +454,11 @@ const TextbooksPage = () => {
                           </h5>
                         </div>
                         <div className="card-body">
-                          {/* Original Textbook */}
-                          {originalTextbooks.english && (
-                            <div className="mb-3">
-                              <small className="text-muted d-block mb-2">
-                                <i className="bi bi-archive me-1"></i>Original Textbook
-                              </small>
-                              <TextbookDownload 
-                                textbook={originalTextbooks.english} 
-                                medium="English" 
-                              />
-                            </div>
-                          )}
-                          
                           {/* Uploaded Textbooks */}
-                          {uploadedSubjectTextbooks.english && (
+                          {uploadedSubjectTextbooks.english ? (
                             <div>
                               <small className="text-success d-block mb-2">
-                                <i className="bi bi-cloud-upload me-1"></i>Uploaded Textbooks
+                                <i className="bi bi-cloud-upload me-1"></i>Available Textbooks
                               </small>
                               <UploadedTextbookDownload 
                                 files={uploadedSubjectTextbooks.english}
@@ -401,13 +466,13 @@ const TextbooksPage = () => {
                                 language="english"
                               />
                             </div>
-                          )}
-                          
-                          {/* No textbooks */}
-                          {!originalTextbooks.english && !uploadedSubjectTextbooks.english && (
+                          ) : (
                             <div className="text-center py-4">
                               <i className="bi bi-file-earmark text-muted" style={{ fontSize: '3rem' }}></i>
                               <p className="text-muted mt-2">No English textbook available</p>
+                              <Link to="/admin/login" className="btn btn-outline-primary btn-sm">
+                                <i className="bi bi-plus-circle me-1"></i>Upload Textbook
+                              </Link>
                             </div>
                           )}
                         </div>
@@ -419,21 +484,12 @@ const TextbooksPage = () => {
             );
           })}
 
-          {/* No Textbooks Message */}
-          {Object.keys(allSubjects).length === 0 && (
+          {/* No subjects for A/L without stream */}
+          {gradeId === 'al' && !selectedStream && (
             <div className="text-center py-5">
-              <i className="bi bi-book text-muted" style={{ fontSize: '4rem' }}></i>
-              <h4 className="mt-3 text-muted">No textbooks available</h4>
-              <p className="text-muted">
-                Textbooks for this grade haven't been added yet.
-                <br />
-                <Link to="/admin/login" className="text-primary">
-                  Admin can upload textbooks here
-                </Link>
-              </p>
-              <Link to={`/grade/${gradeId}`} className="btn btn-primary">
-                <i className="bi bi-arrow-left me-1"></i>Back to Grade Overview
-              </Link>
+              <i className="bi bi-arrow-up text-muted" style={{ fontSize: '4rem' }}></i>
+              <h4 className="mt-3 text-muted">Select a Stream</h4>
+              <p className="text-muted">Please select your A/L stream above to view available textbooks.</p>
             </div>
           )}
         </div>
@@ -475,6 +531,15 @@ const TextbooksPage = () => {
 
         .subject-icon-large {
           min-width: 60px;
+        }
+
+        .subject-section {
+          border-bottom: 1px solid var(--border-color);
+          padding-bottom: 2rem;
+        }
+
+        .subject-section:last-child {
+          border-bottom: none;
         }
       `}</style>
     </div>
